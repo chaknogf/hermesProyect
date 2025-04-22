@@ -35,11 +35,13 @@ source venv/bin/activate
 ## 📦 Instalar dependencias
 
 ```pip install -r requirements.txt
+
 ```
 
 ## 🚀 Iniciar servidor de desarrollo
 
 ```uvicorn main:app --reload
+
 ```
 
  • Documentación interactiva: <http://localhost:8000/docs>
