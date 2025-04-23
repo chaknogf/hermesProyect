@@ -5,8 +5,9 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import desc
 from app.db.session import SessionLocal
-from app.models.patient import Patient as PatientModel
+from app.models.patient import Paciente as PatientModel
 from app.schemas.patient import PatientSchema 
+from app.utils.hl7_to_fhir import hl7_to_fhir_patient as hl7_patient
 
 router = APIRouter()
 
@@ -88,3 +89,11 @@ async def delete_paciente(
         return JSONResponse(status_code=200, content={"message": "Paciente eliminado exitosamente"})
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))     
+    
+@router.post("/paciente/hl7/", tags=["pacientes"])
+async def convertir_mensaje(hl7: str):
+    try:
+        fhir_patient = hl7_patient(hl7)
+        return JSONResponse(status_code=200, content=fhir_patient.dict())
+    except Exception as e:
+        return JSONResponse(status_code=400, content={"error": str(e)})

@@ -8,11 +8,37 @@ BEGIN
 END
 $$;
 
-CREATE TABLE IF NOT EXISTS patients (
+-- Tabla de pacientes con estructura mixta: campos clave + JSONB extendido
+CREATE TABLE IF NOT EXISTS pacientes (
     id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
     cui VARCHAR(30) UNIQUE NOT NULL,
-    birth_date DATE NOT NULL,
-    address TEXT,
-    phone VARCHAR(20)
+    id_fhir TEXT UNIQUE,
+    nombres TEXT,
+    apellidos TEXT,
+    fecha_nacimiento DATE,
+    genero TEXT,
+    datos_paciente JSONB, -- Datos extendidos tipo FHIR
+    fecha_creacion TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE unidad_salud (
+    id SERIAL PRIMARY KEY,
+    codigo VARCHAR(50) UNIQUE NOT NULL, -- ej. USALUD001
+    nombre TEXT NOT NULL,
+    establecimiento_envia VARCHAR(100) NOT NULL, -- MSH-4
+    sistema_envia VARCHAR(100), -- MSH-3 (opcional)
+    configuracion JSONB NOT NULL,
+    activo BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE IF NOT EXISTS fuentes_hl7 (
+    id SERIAL PRIMARY KEY,
+    sistema_envia TEXT,              -- SISTEMA
+    establecimiento_envia TEXT,      -- ORIGEN
+    sistema_recibe TEXT,             -- DESTINO
+    establecimiento_recibe TEXT,     -- Opcional
+    version TEXT DEFAULT '2.3',      -- versión HL7
+    tipo_mensaje TEXT,               -- TIPO_MENSAJE
+    configuracion_personalizada JSONB, -- Parámetros específicos
+    fecha_creacion TIMESTAMP DEFAULT now()
 );

@@ -5,11 +5,13 @@ from datetime import date
 from typing import Optional
 
 class PatientSchema(BaseModel):
-    full_name: str
-    cui: str
-    birth_date: date
-    address: str | None = None
-    phone: str | None = None
+    cui: int 
+    id_fhir: str
+    nombres: str
+    apellidos: str
+    fecha_nacimiento: date
+    genero: str
+    datos_paciente: dict
 
     class Config:
         from_attributes = True
