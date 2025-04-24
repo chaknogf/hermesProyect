@@ -31,3 +31,5 @@ def hl7_to_fhir_patient(hl7_message: str) -> Patient:
     )
 
     return fhir_patient
+
+

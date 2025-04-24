@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.db.session import test_database_connection
 
 from app.routes.patient import router as patient
+from app.routes.paciente import router as paciente
 
 app = FastAPI(title="FHIR Interop API", version="1.0.0")
 
@@ -19,14 +20,12 @@ app.add_middleware(
 def redirect_to_docs():
     return RedirectResponse(url="/docs")
 
-@app.get("/hola")
-def root():
-    return {
-        "mensaje": "Bienvenido a la API FHIR Interoperable 🩺",
-        "estado": "operativa",
-        "documentacion": "/docs"
-    }
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
     
 app.include_router(patient)
+app.include_router(paciente)
 
 test_database_connection()

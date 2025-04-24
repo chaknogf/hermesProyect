@@ -1,13 +1,11 @@
-def identify_hospital(hl7_message: str) -> dict:
+def identificar_unidad_salud(hl7_message: str, db: Session) -> dict:
     msh_segment = next(seg for seg in hl7_message.split("\n") if seg.startswith("MSH"))
-    fields = msh_segment.split("|")
-    sending_facility = fields[4]  # MSH-4
-    sending_app = fields[3]       # MSH-3
+    campos = msh_segment.split("|")
+    sending_facility = campos[4]  # MSH-4
 
-    # Buscar en la base de datos el hospital correspondiente
-    hospital = db.query(Hospital).filter_by(sending_facility=sending_facility).first()
+    unidad = db.query(UnidadSalud).filter_by(sending_facility=sending_facility).first()
 
-    if not hospital:
-        raise ValueError("Hospital no registrado en el sistema.")
+    if not unidad:
+        raise ValueError(f"Unidad de salud '{sending_facility}' no registrada.")
 
-    return hospital.config
+    return unidad.config
