@@ -1,17 +1,24 @@
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 from typing import Generator
-import os
+import os 
 
 # Variables de entorno (con valores por defecto para prueba local)
-DB_USER = os.getenv("DB_USER", "postgres")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_NAME = os.getenv("DB_NAME", "hermesdb")
-DB_PORT = os.getenv("DB_PORT", "5432")
+# DB_USER = os.getenv("DB_USER", "postgres")
+# DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
+# DB_HOST = os.getenv("DB_HOST", "localhost")
+# DB_NAME = os.getenv("DB_NAME", "hermesdb")
+# DB_PORT = os.getenv("DB_PORT", "5432")
+
+DB_USER = os.getenv("DB_USER", "postgres.lgoxhgpvhzskohpbhskf")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "hermespass")
+DB_HOST = os.getenv("DB_HOST", "aws-0-us-west-1.pooler.supabase.com")
+DB_NAME = os.getenv("DB_NAME", "postgres")
+DB_PORT = os.getenv("DB_PORT", "6543")
 
 # Construcción de la URL de la base de datos
-DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+# DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 # DATABASE_URL = f"postgresql://{DB_USER}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 # Crear el engine de SQLAlchemy
 engine = create_engine(DATABASE_URL, echo=False)

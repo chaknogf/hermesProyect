@@ -27,7 +27,7 @@ class FuenteExternaOut(BaseModel):
     nombre: str
     endpoints: list[EndpointConfig]
     activo: bool
-    creado_en: datetime
+    creado_en: Optional[datetime] = datetime
     
     
 
