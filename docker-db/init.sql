@@ -87,3 +87,19 @@ CREATE TABLE IF NOT EXISTS fuentes_hl7 (
     configuracion_personalizada JSONB,               -- Configuración personalizada adicional
     fecha_creacion TIMESTAMP DEFAULT now()           -- Fecha de creación del registro
 );
+
+CREATE TABLE IF NOT EXISTS log_consumido (
+    id SERIAL PRIMARY KEY,
+    cui TEXT NOT NULL,                             -- CUI del paciente consultado
+    unidad_salud INTEGER NOT NULL,                 -- ID de la unidad/hospital que respondió
+    paciente JSONB NOT NULL,                       -- Datos del paciente retornados
+    created_at TIMESTAMP DEFAULT NOW()             -- Fecha y hora de la consulta
+);
+
+CREATE TABLE IF NOT EXISTS fuentes_externas (
+    id SERIAL PRIMARY KEY,
+    nombre TEXT NOT NULL,
+    endpoints JSONB NOT NULL,  
+    activo BOOLEAN DEFAULT TRUE,
+    creado_en TIMESTAMP DEFAULT now()
+);

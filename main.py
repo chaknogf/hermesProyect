@@ -3,8 +3,9 @@ from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.db.session import test_database_connection
 
-from app.routes.patient import router as patient
-from app.routes.paciente import router as paciente
+from app.routes.logs import router as logs_router
+from app.routes.fuentes_externas import router as fuentes_externas_router
+from app.routes.buscador import router as buscador_router
 
 app = FastAPI(title="FHIR Interop API", version="1.0.0")
 
@@ -16,16 +17,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(logs_router)
+app.include_router(fuentes_externas_router)
+app.include_router(buscador_router)
+
 @app.get("/", include_in_schema=False)
 def redirect_to_docs():
     return RedirectResponse(url="/docs")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8800)
 
     
-app.include_router(patient)
-app.include_router(paciente)
+
 
 test_database_connection()
