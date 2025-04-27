@@ -6,7 +6,7 @@ click==8.1.8
 colorama==0.4.6
 cors==1.0.1
 dotenv==0.9.9
-fastapi[standard]==0.110.2
+fastapi[standard]==0.115.12
 fhir-core==1.0.1
 fhir.resources==8.0.0
 filelock==3.18.0
