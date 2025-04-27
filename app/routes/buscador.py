@@ -55,11 +55,13 @@ class AutenticacionAPI:
         import base64
         credentials = f"{self.user}:{self.password}"
         return base64.b64encode(credentials.encode("utf-8")).decode("utf-8")
-
+   
     async def hacer_solicitud(self, url, params=None):
         headers = self.obtener_headers()
 
-        async with httpx.AsyncClient(cookies=self.cookies) as client:  # Añadir cookies en la solicitud
+        timeout = httpx.Timeout(35.0)  # Aumentamos timeout a 15 segundos
+
+        async with httpx.AsyncClient(cookies=self.cookies, timeout=timeout) as client:
             if self.tipo_autenticacion == "none":
                 response = await client.get(url, params=params)
             else:
