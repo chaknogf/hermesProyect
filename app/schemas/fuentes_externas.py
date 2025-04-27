@@ -7,6 +7,10 @@ class EndpointConfig(BaseModel):
     metodo: Optional[str] = "GET"
     ruta: Optional[str] = None
     token: Optional[str] = None
+    user: Optional[str] = None
+    password: Optional[str] = None
+    cookies: Optional[Dict[str, str]] = None
+    
 
 class FuentesExternas(BaseModel):
     id: int
