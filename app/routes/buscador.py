@@ -44,7 +44,7 @@ async def buscar_paciente_por_cui(cui: str, db: SQLAlchemySession = Depends(get_
             for fuente in fuentes:
                 try:
                     endpoint_config = fuente.endpoints[0] if isinstance(fuente.endpoints, list) else list(fuente.endpoints.values())[0]
-                   
+                    headers = {"X-Internal-Request": "true"}
                     base = endpoint_config.get("base_url", "")
                     ruta = endpoint_config.get("ruta", "").replace("{valor}", cui)
                     metodo = endpoint_config.get("metodo", "GET").upper()
@@ -55,7 +55,7 @@ async def buscar_paciente_por_cui(cui: str, db: SQLAlchemySession = Depends(get_
                     url = f"{base.rstrip('/')}{ruta}{parametros}"
                     #print(f"URL solicitada: {url}")
 
-                    response = await client.request(method=metodo, url=url, timeout=5.0)
+                    response = await client.request(method=metodo, url=url, timeout=5.0, headers=headers)
                     print("Método:", response.request.method)
                     #print("URL usada:", str(response.request.url))
                     if response.status_code == 200:
