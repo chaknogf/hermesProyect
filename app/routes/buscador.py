@@ -39,19 +39,31 @@ class AutenticacionAPI:
             pool=5.0       
         )
     def obtener_headers(self):
-        """
-        Genera los encabezados de autenticación según el tipo.
-        """
+
         if self.tipo_autenticacion == "basic":
             return {"Authorization": f"Basic {self._encode_basic_auth()}"}
+        
         elif self.tipo_autenticacion == "bearer":
             return {"Authorization": f"Bearer {self.token}"}
+        
+        elif self.tipo_autenticacion == "cookie":
+            # Cookies como PHPSESSID no van en Authorization,
+            # Se envían en `cookies` cuando se hace la solicitud, no en headers.
+            return {}
+        
+        elif self.tipo_autenticacion == "cookie-header":
+            # Caso especial: enviar cookie PHPSESSID manualmente como header
+            if self.cookies and isinstance(self.cookies, dict):
+                cookies_header = "; ".join(f"{k}={v}" for k, v in self.cookies.items())
+                return {"Cookie": cookies_header}
+            else:
+                raise ValueError("Se esperaba un diccionario de cookies para autenticación tipo 'cookie-header'.")
+        
         elif self.tipo_autenticacion == "none":
             return {}
-        elif self.tipo_autenticacion == "cookie":
-            return {}  # En este caso no es necesario agregar Authorization, se maneja con cookies
+        
         else:
-            raise ValueError(f"Tipo de autenticación {self.tipo_autenticacion} no soportado.")
+            raise ValueError(f"Tipo de autenticación '{self.tipo_autenticacion}' no soportado.")
 
     def _encode_basic_auth(self):
         """
