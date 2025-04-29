@@ -31,8 +31,13 @@ class AutenticacionAPI:
         self.user = user
         self.password = password
         self.token = token
-        self.cookies = cookies  # Añadir el atributo cookies
-
+        self.cookies = cookies  
+        self.timeout = httpx.Timeout(
+            connect=5.0,    
+            read=30.0,      
+            write=5.0,      
+            pool=5.0       
+        )
     def obtener_headers(self):
         """
         Genera los encabezados de autenticación según el tipo.
@@ -58,17 +63,12 @@ class AutenticacionAPI:
    
     async def hacer_solicitud(self, url, params=None):
         headers = self.obtener_headers()
-
-        timeout = httpx.Timeout(35.0)  # Aumentamos timeout a 15 segundos
-
-        async with httpx.AsyncClient(cookies=self.cookies, timeout=timeout) as client:
+        async with httpx.AsyncClient(cookies=self.cookies, timeout=self.timeout) as client:
             if self.tipo_autenticacion == "none":
                 response = await client.get(url, params=params)
             else:
                 response = await client.get(url, headers=headers, params=params)
-
         return response
-
 
 @router.get("/buscar_paciente_cui/{cui}", response_model=BuscarPacienteResult)
 async def buscar_paciente_por_cui(cui: str, db: SQLAlchemySession = Depends(get_db)):
