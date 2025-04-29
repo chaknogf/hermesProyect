@@ -38,101 +38,122 @@ class AutenticacionAPI:
             write=5.0,      
             pool=5.0       
         )
-    def obtener_headers(self):
 
+    def obtener_headers(self):
         if self.tipo_autenticacion == "basic":
             return {"Authorization": f"Basic {self._encode_basic_auth()}"}
-        
         elif self.tipo_autenticacion == "bearer":
             return {"Authorization": f"Bearer {self.token}"}
-        
-        elif self.tipo_autenticacion == "cookie":
-            # Cookies como PHPSESSID no van en Authorization,
-            # Se envían en `cookies` cuando se hace la solicitud, no en headers.
+        elif self.tipo_autenticacion in ["cookie", "login-cookie"]:
             return {}
-        
         elif self.tipo_autenticacion == "cookie-header":
-            # Caso especial: enviar cookie PHPSESSID manualmente como header
             if self.cookies and isinstance(self.cookies, dict):
                 cookies_header = "; ".join(f"{k}={v}" for k, v in self.cookies.items())
                 return {"Cookie": cookies_header}
             else:
                 raise ValueError("Se esperaba un diccionario de cookies para autenticación tipo 'cookie-header'.")
-        
         elif self.tipo_autenticacion == "none":
             return {}
-        
         else:
             raise ValueError(f"Tipo de autenticación '{self.tipo_autenticacion}' no soportado.")
 
     def _encode_basic_auth(self):
-        """
-        Codifica el usuario y la contraseña para autenticación básica en formato Base64.
-        """
         import base64
         credentials = f"{self.user}:{self.password}"
         return base64.b64encode(credentials.encode("utf-8")).decode("utf-8")
-   
-    async def hacer_solicitud(self, url, params=None):
-        headers = self.obtener_headers()
+
+    async def login_y_obtener_cookies(self, login_url, login_data: dict):
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            resp = await client.post(login_url, data=login_data)
+            resp.raise_for_status()
+            self.cookies = resp.cookies
+
+    async def verificar_permiso(self, permiso_url: str, nombre_permiso: str) -> bool:
+        url = f"{permiso_url}?SegStrNomPermiso={nombre_permiso}"
+        print(f"\n🔍 Verificando permiso: {nombre_permiso} en {url}")
         async with httpx.AsyncClient(cookies=self.cookies, timeout=self.timeout) as client:
-            if self.tipo_autenticacion == "none":
-                response = await client.get(url, params=params)
-            else:
-                response = await client.get(url, headers=headers, params=params)
+            try:
+                resp = await client.get(url)
+                resp.raise_for_status()
+                data = resp.json()
+                permisos = data.get("data", [])
+                for permiso in permisos:
+                    if permiso.get("SegStrNomPermiso") == nombre_permiso:
+                        print(f"✅ Permiso '{nombre_permiso}' concedido")
+                        return True
+                print(f"❌ Permiso '{nombre_permiso}' no encontrado")
+                return False
+            except Exception as e:
+                print(f"💥 Error al verificar permiso: {e}")
+                return False
+
+    async def hacer_solicitud(self, url, params=None, login_url=None, login_data=None):
+        if self.tipo_autenticacion == "login-cookie" and login_url and login_data:
+            await self.login_y_obtener_cookies(login_url, login_data)
+        headers = self.obtener_headers()
+        print("\n🔍 Realizando solicitud HTTP:")
+        print(f"📡 URL: {url}")
+        print(f"🔐 Tipo de autenticación: {self.tipo_autenticacion}")
+        if self.user: print(f"👤 Usuario: {self.user}")
+        if self.password: print(f"🔑 Contraseña: {'*' * len(self.password)}")
+        if self.token: print(f"🪪 Token: {'***' + self.token[-8:]}")
+        if self.cookies: print(f"🍪 Cookies: {self.cookies}")
+        async with httpx.AsyncClient(cookies=self.cookies, timeout=self.timeout) as client:
+            response = await client.get(url, headers=headers, params=params)
         return response
 
 @router.get("/buscar_paciente_cui/{cui}", response_model=BuscarPacienteResult)
 async def buscar_paciente_por_cui(cui: str, db: SQLAlchemySession = Depends(get_db)):
     try:
-        fuentes_consumidas = []
-        # Obtener las fuentes activas de la base de datos
         fuentes = db.query(FuenteExterna).filter(FuenteExterna.activo == True).all()
 
         if not fuentes:
             raise HTTPException(status_code=404, detail="No hay fuentes externas activas registradas")
-        
-        fuentes_consumidas = [f.nombre for f in fuentes]
-        print("Fuentes conectadas:", fuentes_consumidas)
 
+        print("Fuentes conectadas:", [f.nombre for f in fuentes])
         resultados = []
 
-        async def consultar_fuente(fuente, cui, db, client):
+        async def consultar_fuente(fuente, cui, db):
             try:
-                # Obtener la configuración del endpoint
                 endpoint_config = fuente.endpoints[0] if isinstance(fuente.endpoints, list) else list(fuente.endpoints.values())[0]
                 base = endpoint_config.get("base_url", "")
                 ruta = endpoint_config.get("ruta", "").replace("VALORBUSCADO", cui)
                 metodo = endpoint_config.get("metodo", "GET").upper()
 
-                # Obtener el token, usuario y contraseña de la configuración
                 token = endpoint_config.get("token")
                 user = endpoint_config.get("user")
                 password = endpoint_config.get("password")
-                cookies = endpoint_config.get("cookies", {})  # Obtener cookies si es necesario
+                cookies = endpoint_config.get("cookies", {})
+                auth_type = endpoint_config.get("auth_type", "none")
+                login_url = endpoint_config.get("login_url")
+                permiso_url = endpoint_config.get("permiso_url")
+                nombre_permiso = endpoint_config.get("nombre_permiso")
+                login_data = {"user": user, "password": password} if auth_type == "login-cookie" else None
 
-                # Construcción de la URL con token si es necesario
                 url = f"{base.rstrip('/')}{ruta}"
                 if token:
                     token = f"&{token}" if not token.startswith("&") else token
                     url += token
 
-                # Usar la clase AutenticacionAPI para manejar la autenticación
-                if cookies:
-                    autenticacion = AutenticacionAPI(
-                        tipo_autenticacion="cookie",  # Usar autenticación por cookies
-                        cookies=cookies  # Pasar cookies a la clase
-                    )
-                else:
-                    autenticacion = AutenticacionAPI(
-                        tipo_autenticacion="basic" if user and password else "bearer" if token else "none",
-                        user=user,
-                        password=password,
-                        token=token
-                    )
+                autenticacion = AutenticacionAPI(
+                    tipo_autenticacion=auth_type,
+                    user=user,
+                    password=password,
+                    token=token,
+                    cookies=cookies
+                )
 
-                response = await autenticacion.hacer_solicitud(url)
-                print(f"Headers enviados: {autenticacion.obtener_headers()}")  # Depuración para verificar los encabezados
+                if permiso_url and nombre_permiso:
+                    tiene_permiso = await autenticacion.verificar_permiso(permiso_url, nombre_permiso)
+                    if not tiene_permiso:
+                        print(f"❌ El usuario no tiene el permiso requerido '{nombre_permiso}' para la fuente {fuente.nombre}")
+                        return
+
+                response = await autenticacion.hacer_solicitud(
+                    url=url,
+                    login_url=login_url,
+                    login_data=login_data
+                )
 
                 if response.status_code == 200:
                     pacientes = response.json()
@@ -148,7 +169,7 @@ async def buscar_paciente_por_cui(cui: str, db: SQLAlchemySession = Depends(get_
                         )
                         db.add(log)
                         db.flush()
-                        
+
                         log_response = LogConsumidoConFuente(
                             id=log.id,
                             cui=log.cui,
@@ -159,7 +180,6 @@ async def buscar_paciente_por_cui(cui: str, db: SQLAlchemySession = Depends(get_
                         )
                         resultados.append(log_response.model_dump())
 
-                    # Log de éxito cuando se obtienen datos
                     log_exito = LogConsumido(
                         cui=cui,
                         unidad_salud=fuente.id,
@@ -170,7 +190,6 @@ async def buscar_paciente_por_cui(cui: str, db: SQLAlchemySession = Depends(get_
                     db.flush()
 
                 else:
-                    # Log de error si la respuesta no es 200
                     log_error = LogConsumido(
                         cui=cui,
                         unidad_salud=fuente.id,
@@ -180,7 +199,7 @@ async def buscar_paciente_por_cui(cui: str, db: SQLAlchemySession = Depends(get_
                     db.add(log_error)
                     db.flush()
                     print(f"Error en la respuesta de {fuente.nombre}: {response.text}")
-                    
+
             except Exception as e:
                 log_error = LogConsumido(
                     cui=cui,
@@ -192,13 +211,10 @@ async def buscar_paciente_por_cui(cui: str, db: SQLAlchemySession = Depends(get_
                 db.flush()
                 print(f"Error al consultar {fuente.nombre}: {e}")
 
-        # Consultar todas las fuentes en paralelo
-        async with httpx.AsyncClient() as client:
-            tasks = [consultar_fuente(fuente, cui, db, client) for fuente in fuentes]
-            await asyncio.gather(*tasks)
+        tasks = [consultar_fuente(fuente, cui, db) for fuente in fuentes]
+        await asyncio.gather(*tasks)
 
         db.commit()
-
         print(f"Resultados encontrados: {resultados}")
         return BuscarPacienteResult(pacientes_encontrados=resultados)
 
