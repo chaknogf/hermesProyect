@@ -6,12 +6,12 @@ class EndpointConfig(BaseModel):
     base_url: Optional[str] = None
     metodo: Optional[str] = "GET"
     ruta: Optional[str] = None
-    auth_type: Optional[str] = None
-    login_url: Optional[str] = None
-    token: Optional[str] = None
-    user: Optional[str] = None
-    password: Optional[str] = None
-    cookies: Optional[Dict[str, str]] = None
+    # auth_type: Optional[str] = None
+    # login_url: Optional[str] = None
+    # token: Optional[str] = None
+    # user: Optional[str] = None
+    # password: Optional[str] = None
+    # cookies: Optional[Dict[str, str]] = None
     
 
 class FuentesExternas(BaseModel):
