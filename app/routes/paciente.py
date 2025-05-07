@@ -25,6 +25,7 @@ async def obtener_pacientes(
     id = Query(None, description="ID del paciente"),
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=0),
+    
     # token: str = Depends(oauth2_scheme),
     db: SQLAlchemySession = Depends(get_db)
     ):

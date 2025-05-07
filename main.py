@@ -4,8 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.db.session import test_database_connection
 from app.middlewares.request_monitor import monitor_and_log_requests
 
-from app.routes.logs import router as logs_router
 from app.routes.paciente import router as pacientes
+from app.routes.organizaciones import router as organizaciones
+from app.routes.consultas import router as consultas
 
 
 app = FastAPI(title="FHIR Interop API", version="1.0.10")
@@ -18,12 +19,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 # Aquí registramos el middleware de monitorización
-@app.middleware("http")
-async def monitor_requests(request, call_next):
-    return await monitor_and_log_requests(request, call_next)
 
-app.include_router(logs_router)
 app.include_router(pacientes)
+app.include_router(organizaciones)
+app.include_router(consultas)
 
 
 @app.get("/", include_in_schema=False)

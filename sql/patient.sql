@@ -7,6 +7,7 @@ CREATE TABLE pacientes (
     segundo_nombre VARCHAR(50),
     primer_apellido VARCHAR(50),
     segundo_apellido VARCHAR(50),
+    otro nombre VARCHAR(50),
     sexo VARCHAR(2),
     fecha_nacimiento DATE,
     -- ☎️ Contacto
