@@ -8,7 +8,7 @@ class Organizacion(Base):
     id = Column(Integer, primary_key=True, index=True)
     unidad = Column(Integer, nullable=False, unique=True)
     departamento = Column(String(30), nullable=False)
-    depencia = Column(String(50), nullable=False)
+    dependencia = Column(String(50), nullable=False)
     nombre = Column(String(50), nullable=False)
     estado = Column(Boolean, nullable=False)
     

@@ -6,7 +6,7 @@ from typing import Optional
 class OrganizacionBase(BaseModel):
     unidad: int
     departamento: str
-    depencia: str
+    dependencia: str
     nombre: str
     estado: bool
 
@@ -17,7 +17,7 @@ class OrganizacionCreate(OrganizacionBase):
 
 class OrganizacionUpdate(BaseModel):
     departamento: Optional[str]
-    depencia: Optional[str]
+    dependencia: Optional[str]
     nombre: Optional[str]
     estado: Optional[bool]
 

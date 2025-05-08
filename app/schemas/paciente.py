@@ -9,58 +9,58 @@ class Identificador(BaseModel):
 
 
 class Contacto(BaseModel):
-    telefono: Optional[str]
-    email: Optional[str]
-    departamento: Optional[str]
-    municipio: Optional[str]
-    comunidad: Optional[str]
-    direccion: Optional[str]
+    telefono: Optional[str] = None
+    email: Optional[str] = None
+    departamento: Optional[str]  = None
+    municipio: Optional[str] = None
+    comunidad: Optional[str] = None
+    direccion: Optional[str] = None
 
 
 class Referencia(BaseModel):
-    nombre: str
-    parentesco: str
-    telefono: Optional[str]
+    nombre: Optional[str] = None
+    parentesco: Optional[str] = None
+    telefono: Optional[str] = None
 
 
 class DatosExtra(BaseModel):
-    nacionalidad: Optional[str]
-    ocupacion: Optional[str]
-    idiomas: Optional[str]
-    estado_civil: Optional[str]
-    fecha_defuncion: Optional[date]
+    nacionalidad: Optional[str] = None
+    ocupacion: Optional[str] = None
+    idiomas: Optional[str] = None
+    estado_civil: Optional[str] = None
+    fecha_defuncion: Optional[date] = None
 
 
 class ResumenClinico(BaseModel):
-    unidad_salud: Optional[str]
-    diagnostico: Optional[str]
-    fecha: Optional[str]
-    tratamiento: Optional[str]
+    unidad_salud: Optional[str] = None
+    diagnostico: Optional[str] = None
+    fecha: Optional[str] = None
+    tratamiento: Optional[str] = None
 
 
 class Metadatos(BaseModel):
-    usuario: Optional[str]
-    fecha_hora: Optional[str]
+    usuario: Optional[str] = None
+    fecha_hora: Optional[str] = None
 
 
 class PacienteSchema(BaseModel):
-    id: Optional[int]  # Solo si va a usarse como schema de respuesta
+    id: Optional[int]  = None
     identificadores: List[Identificador]
 
-    primer_nombre: Optional[str]
-    segundo_nombre: Optional[str]
-    primer_apellido: Optional[str]
-    segundo_apellido: Optional[str]
-    sexo: Optional[str]
-    fecha_nacimiento: Optional[date]
+    primer_nombre: Optional[str] = None
+    segundo_nombre: Optional[str] = None
+    primer_apellido: Optional[str] = None
+    segundo_apellido: Optional[str] = None
+    sexo: Optional[str] = None
+    fecha_nacimiento: Optional[date] = None
 
-    contacto: Optional[Contacto]
-    referencias: Optional[List[Referencia]]
-    datos_extra: Optional[DatosExtra]
+    contacto: Optional[Contacto] = None
+    referencias: Optional[List[Referencia]] = None
+    datos_extra: Optional[DatosExtra] = None
 
     estado: Optional[str] = Field(default="A")
-    metadatos: Optional[List[Metadatos]]
-    resumen_clinico: Optional[List[ResumenClinico]]
+    metadatos: Optional[List[Metadatos]]  = None
+    resumen_clinico: Optional[List[ResumenClinico]] = None
 
     @property
     def nombre_completo(self) -> str:
