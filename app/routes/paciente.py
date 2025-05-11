@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session as SQLAlchemySession
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 from app.db.session import SessionLocal
 from app.models.paciente import PacienteModel
 from app.schemas.paciente import PacienteSchema
@@ -26,8 +26,7 @@ async def obtener_pacientes(
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=0),
     cui: str = Query(None, description="CUI del paciente"),
-    nombre: str = Query(None, description="Nombre del paciente"),
-    apellido: str = Query(None, description="Apellido del paciente"),
+    nombre_completo: str = Query(None, description="Nombre completo del paciente"),
     
     # token: str = Depends(oauth2_scheme),
     db: SQLAlchemySession = Depends(get_db)
@@ -41,11 +40,17 @@ async def obtener_pacientes(
         if cui:
             query = query.filter(PacienteModel.cui.ilke(f"%{cui}%"))
 
-        if nombre:
-            query = query.filter(PacienteModel.nombre.ilike(f"%{nombre}%"))
+        if nombre_completo:
+            nombre_completo_expr = func.concat_ws(
+                ' ',
+                PacienteModel.primer_nombre,
+                PacienteModel.segundo_nombre,
+                PacienteModel.primer_apellido,
+                PacienteModel.segundo_apellido
+            )
+            query = query.filter(nombre_completo_expr.ilike(f"%{nombre_completo}%"))
 
-        if apellido:
-            query = query.filter(PacienteModel.apellidoilike(f"%{apellido}%"))
+       
 
         result = query.offset(skip).limit(limit).all()
 
