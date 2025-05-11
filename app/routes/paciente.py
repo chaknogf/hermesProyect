@@ -25,6 +25,9 @@ async def obtener_pacientes(
     id = Query(None, description="ID del paciente"),
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=0),
+    cui: str = Query(None, description="CUI del paciente"),
+    nombre: str = Query(None, description="Nombre del paciente"),
+    apellido: str = Query(None, description="Apellido del paciente"),
     
     # token: str = Depends(oauth2_scheme),
     db: SQLAlchemySession = Depends(get_db)
@@ -34,6 +37,15 @@ async def obtener_pacientes(
 
         if id:
             query = query.filter(PacienteModel.id == id)
+
+        if cui:
+            query = query.filter(PacienteModel.cui.ilke(f"%{cui}%"))
+
+        if nombre:
+            query = query.filter(PacienteModel.nombre.ilike(f"%{nombre}%"))
+
+        if apellido:
+            query = query.filter(PacienteModel.apellidoilike(f"%{apellido}%"))
 
         result = query.offset(skip).limit(limit).all()
 
