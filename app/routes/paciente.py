@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlalchemy.orm import Session as SQLAlchemySession
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy import desc, func
+from sqlalchemy import desc, func, text
 from app.db.session import SessionLocal
 from app.models.paciente import PacienteModel
 from app.schemas.paciente import PacienteSchema
@@ -38,8 +39,14 @@ async def obtener_pacientes(
             query = query.filter(PacienteModel.id == id)
 
         if cui:
-            query = query.filter(PacienteModel.cui.ilke(f"%{cui}%"))
-
+            query = query.filter(
+                text(f"""
+                EXISTS (
+                    SELECT 1 FROM jsonb_array_elements(identificadores) AS elem
+                    WHERE elem->>'valor' ILIKE '%{cui}%'
+                )
+                """)
+            )
         if nombre_completo:
             nombre_completo_expr = func.concat_ws(
                 ' ',
